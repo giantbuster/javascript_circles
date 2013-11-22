@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--
+    Jefferson Lam
+    11-20-13
+    JavaScript Assignment 4
+    
+    Assignment: See readme
+-->
+<html>
+<head>
+    <title>Javascript Demo - Bubbles</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <style type="text/css">
+        body {
+            background-color:black;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <script>
+
+    //global variables
+    var counter = 1;
+
+    var bigCircles = {};
+    var bigCircleRadius = 15;
+    var bigCircleMaxRadius = 80;
+
+    var smallCircles = {};
+    var smallCircleRadius = 5;
+    var smallCircleMaxRadius = 15;
+
+    var timer = 0;
+
+    //read: http://stackoverflow.com/questions/3642035/jquerys-append-not-working-with-svg-element
+    //create an SVG element
+    function makeSVG(tag, attrs) {
+        var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (var k in attrs)
+        {
+            el.setAttribute(k, attrs[k]);
+        }
+        return el;
+    }
+
+    function createCircle(cx,cy,r){
+        var circle = makeSVG('circle',  { cx: cx,
+                                          cy: cy,
+                                          r:  r,
+                                          id: 'circle_'+counter,
+                                          style: "fill: white",
+                                        });
+        
+        //Based on the radius, determine which array it goes into
+        var circleArray = (r==bigCircleRadius ? bigCircles : smallCircles);
+
+        //the key will be the HTML id and the value will be the radius
+        circleArray['circle_'+counter] = {  radius: r,
+                                            randomR: Math.floor(Math.random()*255 + 1),
+                                            //randomG: Math.floor(Math.random()*255 + 1),
+                                            randomG: 150 + Math.floor(Math.random()*105 + 1),
+                                            // randomB: Math.floor(Math.random()*255 + 1)
+                                            randomB: 255
+                                         };
+
+        counter++;
+        document.getElementById('svg').appendChild(circle);
+    }
+
+    //go through all the circles and update its radius and background color
+    function updateCircles(size){
+        var circleArray = (size == bigCircleRadius ? bigCircles : smallCircles);
+        var maxRadius = (size == bigCircleRadius ? bigCircleMaxRadius : smallCircleMaxRadius);
+
+        for(circle in circleArray)
+        {
+            var el = document.getElementById(circle);
+
+            //update the radius and the background color
+            var alpha = 1-parseFloat(circleArray[circle].radius/maxRadius);
+            
+            //Make circle grow in size
+            circleArray[circle].radius++;
+            el.setAttribute("r", circleArray[circle].radius);
+
+            //Update fill alpha to fade to 0
+            el.setAttribute("style", "fill: rgba("+ circleArray[circle].randomR + ", " +
+                                                    circleArray[circle].randomG + ", " +
+                                                    circleArray[circle].randomB + ", " +
+                                                    alpha + ")");
+
+            //if the circle radius is greater than maxRadius, remove the dom and remove its value in the circles variable/object
+            if(circleArray[circle].radius > maxRadius)
+            {
+                document.getElementById('svg').removeChild(el);
+                delete circleArray[circle];
+            }
+        }
+    }
+
+    //Create big circles on click
+    function clickCircle(){
+        document.onclick = function(e){ 
+            createCircle(e.x, e.y, bigCircleRadius);
+        }
+    }
+
+    //Create small circles when mouse cursor is moved
+    function cursorCircleEffect(){
+        document.onmousemove = function(e){ 
+            createCircle(e.x, e.y, smallCircleRadius);
+        }
+    }
+
+    //Continuously generate circles in the background
+    function createBigCircles(interval){
+        if (timer==interval){ 
+            createCircle(Math.random()*document.body.clientWidth, Math.random()*document.body.clientHeight, bigCircleRadius); 
+            timer=0;
+        } else {
+            timer++;
+        }
+    }
+
+    //Main loop
+    function mainLoop(){
+        var interval = 0;
+        createBigCircles(interval);
+        clickCircle();
+        cursorCircleEffect();
+        updateCircles(bigCircleRadius);
+        updateCircles(smallCircleRadius);
+    }
+    
+    //execute the mainLoop function every 30 milliseconds
+    setInterval(mainLoop, 30);
+
+    </script>
+
+</body>
+</html>
